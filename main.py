@@ -56,21 +56,21 @@ def main():
                     check_polling['timestamp_to_request']
                 continue
 
-            if not check_polling['new_attempts']['is_negative']:
+            if not check_polling['new_attempts'][0]['is_negative']:
                 bot.send_message(
                     chat_id,
                     text=dedent(f"""\
                         Преподаватель проверил работу и принял её
-                        {check_polling["new_attempts"]["lesson_title"]}
-                        {check_polling["new_attempts"]["lesson_url"]}""")
+                        {check_polling["new_attempts"][0]["lesson_title"]}
+                        {check_polling["new_attempts"][0]["lesson_url"]}""")
                 )
             else:
                 bot.send_message(
                     chat_id,
                     text=dedent(f"""\
                         Преподаватель проверил работу и не принял её.
-                        {check_polling["new_attempts"]["lesson_title"]}
-                        {check_polling["new_attempts"]["lesson_url"]}
+                        {check_polling["new_attempts"][0]["lesson_title"]}
+                        {check_polling["new_attempts"][0]["lesson_url"]}
                         Исправь и отправь заново!""")
                 )
 
