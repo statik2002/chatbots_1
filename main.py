@@ -51,8 +51,6 @@ def main():
 
             check_polling = response.json()
 
-            print(check_polling)
-
             if check_polling['status'] != 'found':
                 params['timestamp'] = \
                     check_polling['timestamp_to_request']
