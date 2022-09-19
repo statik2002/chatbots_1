@@ -2,26 +2,11 @@ import argparse
 import datetime
 import os
 import time
+from textwrap import dedent
+
 import telegram
 import requests
 from dotenv import load_dotenv
-
-
-def get_all_checks_polling(devman_token, params, timeout):
-    url = 'https://dvmn.org/api/long_polling/'
-
-    header = {
-        'Authorization': f'Token {devman_token}',
-    }
-
-    response = requests.get(url, headers=header, data=params, timeout=timeout)
-    response.raise_for_status()
-
-    return response.json()
-
-
-def send_telegram_message(bot, chat_id, message):
-    bot.send_message(chat_id, text=message)
 
 
 def main():
@@ -43,6 +28,12 @@ def main():
 
     bot = telegram.Bot(token=telegram_token)
 
+    url = 'https://dvmn.org/api/long_polling/'
+
+    header = {
+        'Authorization': f'Token {devman_token}',
+    }
+
     while True:
 
         params = {
@@ -50,41 +41,45 @@ def main():
         }
 
         try:
-            all_checks_polling = get_all_checks_polling(
-                devman_token,
-                params,
-                request_timeout
+            response = requests.get(
+                url,
+                headers=header,
+                data=params,
+                timeout=request_timeout
             )
+            response.raise_for_status()
 
-            if all_checks_polling['status'] != 'found':
+            check_polling = response.json()
+
+            print(check_polling)
+
+            if check_polling['status'] != 'found':
                 params['timestamp'] = \
-                    all_checks_polling['timestamp_to_request']
+                    check_polling['timestamp_to_request']
                 continue
 
-            if not all_checks_polling['new_attempts']['is_negative']:
-                send_telegram_message(
-                    bot,
+            if not check_polling['new_attempts']['is_negative']:
+                bot.send_message(
                     chat_id,
-                    f'Преподаватель проверил работу '
-                    f'{all_checks_polling["new_attempts"]["lesson_title"]}'
-                    f'{all_checks_polling["new_attempts"]["lesson_url"]}'
+                    text=dedent(f"""\
+                        Преподаватель проверил работу и принял её
+                        {check_polling["new_attempts"]["lesson_title"]}
+                        {check_polling["new_attempts"]["lesson_url"]}""")
                 )
             else:
-                send_telegram_message(
-                    bot,
+                bot.send_message(
                     chat_id,
-                    f'Преподаватель проверил работу '
-                    f'{all_checks_polling["new_attempts"]["lesson_title"]}'
-                    f'{all_checks_polling["new_attempts"]["lesson_url"]}'
-                    f'К сожалению есть ошибки. Исправь и отправь заново!'
+                    text=dedent(f"""\
+                        Преподаватель проверил работу и не принял её.
+                        {check_polling["new_attempts"]["lesson_title"]}
+                        {check_polling["new_attempts"]["lesson_url"]}
+                        Исправь и отправь заново!""")
                 )
 
         except requests.exceptions.ReadTimeout:
-            print('Requests timeout. Add 5 sec. to timeout')
             request_timeout += 5
 
         except requests.exceptions.ConnectionError:
-            print('No connection. wait 5 sec.')
             time.sleep(5)
 
 
