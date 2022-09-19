@@ -12,4 +12,4 @@
 
 ### Использование
 - Запустить скрипт командой:
-    > `python main.py --chat_id [ваш chat_id]`
+    > `python main.py -c [ваш chat_id]`

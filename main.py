@@ -24,19 +24,6 @@ def send_telegram_message(bot, chat_id, message):
     bot.send_message(chat_id, text=message)
 
 
-def get_all_check(devman_token):
-    url = 'https://dvmn.org/api/user_reviews/'
-
-    header = {
-        'Authorization': f'Token {devman_token}',
-    }
-
-    response = requests.get(url, headers=header)
-    response.raise_for_status()
-
-    return response.json()
-
-
 def main():
     parser = argparse.ArgumentParser(
         description='Скрипт проверяет работы на проверку'
@@ -55,7 +42,6 @@ def main():
     request_timeout = 90
 
     bot = telegram.Bot(token=telegram_token)
-    send_telegram_message(bot, chat_id, 'Hello world!')
 
     while True:
 
@@ -64,35 +50,40 @@ def main():
         }
 
         try:
-            all_checks_polling = get_all_checks_polling(devman_token, params, request_timeout)
-            print(all_checks_polling)
-            if all_checks_polling['status'] == 'found':
-                if not all_checks_polling['new_attempts']['is_negative']:
-                    send_telegram_message(
-                        bot,
-                        chat_id,
-                        f'Преподаватель проверил работу '
-                        f'{all_checks_polling["new_attempts"]["lesson_title"]} '
-                        f'{all_checks_polling["new_attempts"]["lesson_url"]}'
-                    )
-                else:
-                    send_telegram_message(
-                        bot,
-                        chat_id,
-                        f'Преподаватель проверил работу '
-                        f'{all_checks_polling["new_attempts"]["lesson_title"]} '
-                        f'{all_checks_polling["new_attempts"]["lesson_url"]}'
-                        f' Но к сожалению есть ошибки. Исправь и отправь заново!'
-                    )
-            else:
-                params['timestamp'] = all_checks_polling['timestamp_to_request']
-                print('Новых проверок нет. Запрос снова')
+            all_checks_polling = get_all_checks_polling(
+                devman_token,
+                params,
+                request_timeout
+            )
 
-        except requests.exceptions.ReadTimeout as error_timeout:
+            if all_checks_polling['status'] != 'found':
+                params['timestamp'] = \
+                    all_checks_polling['timestamp_to_request']
+                continue
+
+            if not all_checks_polling['new_attempts']['is_negative']:
+                send_telegram_message(
+                    bot,
+                    chat_id,
+                    f'Преподаватель проверил работу '
+                    f'{all_checks_polling["new_attempts"]["lesson_title"]}'
+                    f'{all_checks_polling["new_attempts"]["lesson_url"]}'
+                )
+            else:
+                send_telegram_message(
+                    bot,
+                    chat_id,
+                    f'Преподаватель проверил работу '
+                    f'{all_checks_polling["new_attempts"]["lesson_title"]}'
+                    f'{all_checks_polling["new_attempts"]["lesson_url"]}'
+                    f'К сожалению есть ошибки. Исправь и отправь заново!'
+                )
+
+        except requests.exceptions.ReadTimeout:
             print('Requests timeout. Add 5 sec. to timeout')
             request_timeout += 5
 
-        except requests.exceptions.ConnectionError as error_connection:
+        except requests.exceptions.ConnectionError:
             print('No connection. wait 5 sec.')
             time.sleep(5)
 
