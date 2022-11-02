@@ -7,6 +7,7 @@ import logging
 import telegram
 import requests
 from dotenv import load_dotenv
+import traceback
 
 
 class TelegramLogsHandler(logging.Handler):
@@ -38,8 +39,8 @@ def main(tg_bot, chat_id):
 
     try:
         x = 1 / 0
-    except ZeroDivisionError:
-        logger.error('ZeroDivisionError')
+    except ZeroDivisionError as error:
+        logger.error(f'{error}\n{traceback.format_exc()}')
 
     while True:
 
