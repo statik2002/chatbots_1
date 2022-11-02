@@ -3,36 +3,43 @@ import datetime
 import os
 import time
 from textwrap import dedent
-
+import logging
 import telegram
 import requests
 from dotenv import load_dotenv
 
 
-def main():
-    parser = argparse.ArgumentParser(
-        description='Скрипт проверяет работы на проверку'
-                    ' в Devman и шлет сообщение при '
-                    'проверке в telegram'
-    )
-    parser.add_argument('-c', '--chat_id', help='chat_id в Telegram')
-    args = parser.parse_args()
+class TelegramLogsHandler(logging.Handler):
 
-    load_dotenv()
-    devman_token = os.environ['DEVMAN_TOKEN']
-    telegram_token = os.environ['TELEGRAM_TOKEN']
-    chat_id = args.chat_id
+    def __init__(self, tg_bot, chat_id):
+        super().__init__()
+        self.chat_id = chat_id
+        self.tg_bot = tg_bot
+
+        self.tg_bot.send_message(chat_id=self.chat_id, text='Бот запущен')
+
+    def emit(self, record):
+        log_entry = self.format(record)
+        self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
+
+
+def main(tg_bot, chat_id):
+
+    bot = tg_bot
 
     timestamp = datetime.datetime.now().timestamp()
-    request_timeout = 90
-
-    bot = telegram.Bot(token=telegram_token)
+    request_timeout = 9
 
     url = 'https://dvmn.org/api/long_polling/'
 
     header = {
         'Authorization': f'Token {devman_token}',
     }
+
+    try:
+        x = 1 / 0
+    except ZeroDivisionError:
+        logger.error('ZeroDivisionError')
 
     while True:
 
@@ -75,11 +82,31 @@ def main():
                 )
 
         except requests.exceptions.ReadTimeout:
+            logger.warning('Read timeout! Add 5 sec to timeout.')
             request_timeout += 5
 
         except requests.exceptions.ConnectionError:
+            logger.warning('Connection error! Try to connect after 5 seconds.')
             time.sleep(5)
 
 
 if __name__ == '__main__':
-    main()
+
+    parser = argparse.ArgumentParser(
+        description='Скрипт проверяет работы на проверку'
+                    ' в Devman и шлет сообщение при '
+                    'проверке в telegram'
+    )
+    parser.add_argument('-c', '--chat_id', help='chat_id в Telegram')
+    args = parser.parse_args()
+
+    load_dotenv()
+    devman_token = os.environ['DEVMAN_TOKEN']
+    telegram_token = os.environ['TELEGRAM_TOKEN']
+    bot = telegram.Bot(token=telegram_token)
+
+    logger = logging.getLogger('Logger')
+    logger.setLevel(logging.WARNING)
+    logger.addHandler(TelegramLogsHandler(bot, args.chat_id))
+
+    main(bot, args.chat_id)
