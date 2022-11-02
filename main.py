@@ -29,7 +29,7 @@ def main(tg_bot, chat_id):
     bot = tg_bot
 
     timestamp = datetime.datetime.now().timestamp()
-    request_timeout = 9
+    request_timeout = 60
 
     url = 'https://dvmn.org/api/long_polling/'
 
@@ -82,12 +82,12 @@ def main(tg_bot, chat_id):
                         Исправь и отправь заново!""")
                 )
 
-        except requests.exceptions.ReadTimeout:
-            logger.warning('Read timeout! Add 5 sec to timeout.')
+        except requests.exceptions.ReadTimeout as warn:
+            logger.warning(f'{warn}\nRead timeout! Add 5 sec to timeout.')
             request_timeout += 5
 
-        except requests.exceptions.ConnectionError:
-            logger.warning('Connection error! Try to connect after 5 seconds.')
+        except requests.exceptions.ConnectionError as warn:
+            logger.warning(f'{warn}\nConnection error! Try to connect after 5 seconds.')
             time.sleep(5)
 
 
