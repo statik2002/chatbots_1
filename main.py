@@ -2,6 +2,7 @@ import argparse
 import datetime
 import os
 import time
+import traceback
 from textwrap import dedent
 import logging
 import telegram
@@ -23,7 +24,24 @@ class TelegramLogsHandler(logging.Handler):
         self.tg_bot.send_message(chat_id=self.chat_id, text=log_entry)
 
 
-def main(tg_bot, chat_id):
+def main():
+
+    parser = argparse.ArgumentParser(
+        description='Скрипт проверяет работы на проверку'
+                    ' в Devman и шлет сообщение при '
+                    'проверке в telegram'
+    )
+    parser.add_argument('-c', '--chat_id', help='chat_id в Telegram')
+    args = parser.parse_args()
+
+    load_dotenv()
+    devman_token = os.environ['DEVMAN_TOKEN']
+    telegram_token = os.environ['TELEGRAM_TOKEN']
+    bot = telegram.Bot(token=telegram_token)
+
+    logger = logging.getLogger('Logger')
+    logger.setLevel(logging.WARNING)
+    logger.addHandler(TelegramLogsHandler(bot, args.chat_id))
 
     timestamp = datetime.datetime.now().timestamp()
     request_timeout = 60
@@ -57,7 +75,7 @@ def main(tg_bot, chat_id):
                 continue
 
             if not check_polling['new_attempts'][0]['is_negative']:
-                tg_bot.send_message(
+                bot.send_message(
                     chat_id,
                     text=dedent(f"""\
                         Преподаватель проверил работу и принял её
@@ -65,7 +83,7 @@ def main(tg_bot, chat_id):
                         {check_polling["new_attempts"][0]["lesson_url"]}""")
                 )
             else:
-                tg_bot.send_message(
+                bot.send_message(
                     chat_id,
                     text=dedent(f"""\
                         Преподаватель проверил работу и не принял её.
@@ -84,22 +102,4 @@ def main(tg_bot, chat_id):
 
 
 if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser(
-        description='Скрипт проверяет работы на проверку'
-                    ' в Devman и шлет сообщение при '
-                    'проверке в telegram'
-    )
-    parser.add_argument('-c', '--chat_id', help='chat_id в Telegram')
-    args = parser.parse_args()
-
-    load_dotenv()
-    devman_token = os.environ['DEVMAN_TOKEN']
-    telegram_token = os.environ['TELEGRAM_TOKEN']
-    bot = telegram.Bot(token=telegram_token)
-
-    logger = logging.getLogger('Logger')
-    logger.setLevel(logging.WARNING)
-    logger.addHandler(TelegramLogsHandler(bot, args.chat_id))
-
-    main(bot, args.chat_id)
+    main()
