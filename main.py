@@ -10,6 +10,9 @@ import requests
 from dotenv import load_dotenv
 
 
+logger = logging.getLogger(__file__)
+
+
 class TelegramLogsHandler(logging.Handler):
 
     def __init__(self, tg_bot, chat_id):
@@ -37,10 +40,9 @@ def main():
     load_dotenv()
     devman_token = os.environ['DEVMAN_TOKEN']
     telegram_token = os.environ['TELEGRAM_TOKEN']
+    chat_id = args.chat_id
     bot = telegram.Bot(token=telegram_token)
 
-    logger = logging.getLogger('Logger')
-    logger.setLevel(logging.WARNING)
     logger.addHandler(TelegramLogsHandler(bot, args.chat_id))
 
     timestamp = datetime.datetime.now().timestamp()
@@ -102,4 +104,6 @@ def main():
 
 
 if __name__ == '__main__':
+    logger.setLevel(logging.WARNING)
+
     main()
