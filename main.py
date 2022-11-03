@@ -7,7 +7,6 @@ import logging
 import telegram
 import requests
 from dotenv import load_dotenv
-import traceback
 
 
 class TelegramLogsHandler(logging.Handler):
@@ -26,8 +25,6 @@ class TelegramLogsHandler(logging.Handler):
 
 def main(tg_bot, chat_id):
 
-    bot = tg_bot
-
     timestamp = datetime.datetime.now().timestamp()
     request_timeout = 60
 
@@ -36,11 +33,6 @@ def main(tg_bot, chat_id):
     header = {
         'Authorization': f'Token {devman_token}',
     }
-
-    try:
-        x = 1 / 0
-    except ZeroDivisionError as error:
-        logger.error(f'{error}\n{traceback.format_exc()}')
 
     while True:
 
@@ -65,7 +57,7 @@ def main(tg_bot, chat_id):
                 continue
 
             if not check_polling['new_attempts'][0]['is_negative']:
-                bot.send_message(
+                tg_bot.send_message(
                     chat_id,
                     text=dedent(f"""\
                         Преподаватель проверил работу и принял её
@@ -73,7 +65,7 @@ def main(tg_bot, chat_id):
                         {check_polling["new_attempts"][0]["lesson_url"]}""")
                 )
             else:
-                bot.send_message(
+                tg_bot.send_message(
                     chat_id,
                     text=dedent(f"""\
                         Преподаватель проверил работу и не принял её.
