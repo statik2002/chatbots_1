@@ -2,7 +2,6 @@ import argparse
 import datetime
 import os
 import time
-import traceback
 from textwrap import dedent
 import logging
 import telegram
@@ -29,18 +28,19 @@ class TelegramLogsHandler(logging.Handler):
 
 def main():
 
+    load_dotenv()
+    devman_token = os.environ['DEVMAN_TOKEN']
+    telegram_token = os.environ['TELEGRAM_TOKEN']
+    chat_id = os.environ['CHAT_ID']
+
     parser = argparse.ArgumentParser(
         description='Скрипт проверяет работы на проверку'
                     ' в Devman и шлет сообщение при '
                     'проверке в telegram'
     )
-    parser.add_argument('-c', '--chat_id', help='chat_id в Telegram')
+    parser.add_argument('-c', '--chat_id', help='chat_id в Telegram', default=chat_id)
     args = parser.parse_args()
 
-    load_dotenv()
-    devman_token = os.environ['DEVMAN_TOKEN']
-    telegram_token = os.environ['TELEGRAM_TOKEN']
-    chat_id = args.chat_id
     bot = telegram.Bot(token=telegram_token)
 
     logger.addHandler(TelegramLogsHandler(bot, args.chat_id))
