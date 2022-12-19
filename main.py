@@ -43,6 +43,7 @@ def main():
 
     bot = telegram.Bot(token=telegram_token)
 
+    logger.setLevel(logging.WARNING)
     logger.addHandler(TelegramLogsHandler(bot, args.chat_id))
 
     timestamp = datetime.datetime.now().timestamp()
@@ -104,6 +105,4 @@ def main():
 
 
 if __name__ == '__main__':
-    logger.setLevel(logging.WARNING)
-
     main()
