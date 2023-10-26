@@ -30,7 +30,9 @@
 ```commandline
 docker run chatbot
 ```
-В случае если необходимо указать свой `chat_id` запустить командой:
+В случае если необходимо указать свой данные, то запустить командой:
 ```commandline
-docker run -e "CHAT_ID=[ваш chat id]" chatbot
+docker run -e "CHAT_ID=[ваш chat id]" \
+    -e "DEVMAN_TOKEN=[ваш токен]" \
+    -e "TELEGRAM_TOKEN=[ваш токен]" chatbot
 ```
