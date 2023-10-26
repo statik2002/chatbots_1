@@ -2,6 +2,10 @@
 
 ## Данный скрипт проверяет проверку отправленных работ на Devman и в случае проверки работы, отправляет сообщение в Telegram
 
+### Требования
+
+- Python 3.10
+
 ### Установка
 - Создать виртуальное окружение командой:
     > `python -m venv env`
@@ -20,10 +24,13 @@
 
 1. Создать контейнер командой 
   ```commandline
-  docker build -t chatbot .
+  docker build chatbot .
   ```
 2. После создания контейнера, запустить командой:
 ```commandline
-docker run -d chatbot
+docker run chatbot
 ```
-
+В случае если необходимо указать свой `chat_id` запустить командой:
+```commandline
+docker run -e "CHAT_ID=[ваш chat id]" chatbot
+```
